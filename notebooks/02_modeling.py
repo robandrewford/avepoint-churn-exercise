@@ -41,26 +41,23 @@ def __(mo):
 @app.cell
 def __():
     import sys
-    sys.path.insert(0, "..")
-    
-    import pandas as pd
-    import numpy as np
+    from pathlib import Path
+
+    # Get project root relative to this script's location
+    PROJECT_ROOT = Path(__file__).parent.parent
+    sys.path.insert(0, str(PROJECT_ROOT))
+
     from datetime import date, timedelta
+
+    import mlflow
+    import numpy as np
+    import pandas as pd
     import plotly.express as px
     import plotly.graph_objects as go
-    import mlflow
-    
-    from src.utils.duckdb_lakehouse import create_lakehouse
-    from src.model.train import (
-        prepare_training_data,
-        train_lightgbm,
-        train_with_mlflow,
-        cross_validate_temporal,
-        get_feature_columns,
-    )
+
     from src.model.evaluate import (
-        evaluate_model,
         evaluate_by_cohort,
+        evaluate_model,
         find_optimal_threshold,
         generate_evaluation_report,
     )
@@ -69,6 +66,14 @@ def __():
         get_top_drivers,
         plot_feature_importance,
     )
+    from src.model.train import (
+        cross_validate_temporal,
+        get_feature_columns,
+        prepare_training_data,
+        train_lightgbm,
+        train_with_mlflow,
+    )
+    from src.utils.duckdb_lakehouse import create_lakehouse
     return (
         create_lakehouse,
         cross_validate_temporal,
@@ -83,9 +88,11 @@ def __():
         mlflow,
         np,
         pd,
+        Path,
         plot_feature_importance,
         compute_shap_values,
         prepare_training_data,
+        PROJECT_ROOT,
         px,
         sys,
         timedelta,
@@ -101,17 +108,20 @@ def __(mo):
 
 
 @app.cell
-def __(create_lakehouse, pd):
-    # Load synthetic data
-    customers = pd.read_parquet("../outputs/synthetic_data/customers.parquet")
-    daily_engagement = pd.read_parquet("../outputs/synthetic_data/daily_engagement.parquet")
-    support_tickets = pd.read_parquet("../outputs/synthetic_data/support_tickets.parquet")
-    
+def __(create_lakehouse, pd, PROJECT_ROOT):
+    # Load synthetic data using absolute paths
+    DATA_DIR = PROJECT_ROOT / "outputs" / "synthetic_data"
+
+    customers = pd.read_parquet(DATA_DIR / "customers.parquet")
+    daily_engagement = pd.read_parquet(DATA_DIR / "daily_engagement.parquet")
+    support_tickets = pd.read_parquet(DATA_DIR / "support_tickets.parquet")
+
     # Initialize lakehouse
-    lakehouse = create_lakehouse("../outputs/churn_lakehouse.duckdb")
-    
+    db_path = str(PROJECT_ROOT / "outputs" / "churn_lakehouse.duckdb")
+    lakehouse = create_lakehouse(db_path)
+
     print(f"Loaded {len(customers):,} customers")
-    return customers, daily_engagement, lakehouse, support_tickets
+    return customers, daily_engagement, lakehouse, support_tickets, DATA_DIR
 
 
 @app.cell
@@ -124,17 +134,17 @@ def __(mo):
 def __(customers, daily_engagement, support_tickets, lakehouse):
     # Load bronze layer
     lakehouse.load_bronze_customers(customers)
-    
+
     # Transform to silver
     lakehouse.transform_to_silver_customers()
-    
+
     # Load daily engagement to silver
     lakehouse.load_silver_daily_engagement(daily_engagement)
-    
+
     # Load and transform support tickets
     lakehouse.load_bronze_tickets(support_tickets)
     lakehouse.transform_to_silver_tickets()
-    
+
     print("Medallion architecture loaded!")
     return
 
@@ -146,12 +156,14 @@ def __(mo):
 
 
 @app.cell
-def __(date, lakehouse):
+def __(date, lakehouse, timedelta):
     # Build Customer 360 for specific prediction date
-    prediction_date = date(2024, 11, 1)  # Use a date from our synthetic data
-    
+    # Use 60 days before today to capture customers who churned in the 30-day window
+    from datetime import date as date_module
+    prediction_date = date_module.today() - timedelta(days=60)
+
     lakehouse.build_customer_360(prediction_date)
-    
+
     # Get training data
     df = lakehouse.get_training_data(prediction_date)
     print(f"Customer 360 built: {len(df):,} records")
@@ -169,17 +181,17 @@ def __(mo):
 def __(df, prepare_training_data, np):
     # Prepare features
     X, y, weights = prepare_training_data(df)
-    
+
     print(f"Features: {X.shape[1]}")
     print(f"Samples: {len(X):,}")
     print(f"Class distribution: {y.value_counts().to_dict()}")
-    
+
     # Train/test split (temporal)
     split_idx = int(len(X) * 0.8)
     X_train, X_test = X.iloc[:split_idx], X.iloc[split_idx:]
     y_train, y_test = y.iloc[:split_idx], y.iloc[split_idx:]
     weights_train = weights.iloc[:split_idx]
-    
+
     print(f"\nTrain: {len(X_train):,}, Test: {len(X_test):,}")
     return X, X_test, X_train, split_idx, weights, weights_train, y, y_test, y_train
 
@@ -212,7 +224,7 @@ def __(mo):
 def __(model, X_test, y_test, evaluate_model, mo):
     # Overall metrics
     metrics = evaluate_model(model, X_test, y_test)
-    
+
     metrics_table = f"""
     ### Model Performance
     
@@ -226,7 +238,7 @@ def __(model, X_test, y_test, evaluate_model, mo):
     | F1 | {metrics['f1']:.3f} | > 0.50 |
     | Lift@10% | {metrics['lift_at_10pct']:.1f}x | > 3.0x |
     """
-    
+
     mo.md(metrics_table)
     return metrics, metrics_table
 
@@ -236,7 +248,7 @@ def __(df, model, X_test, y_test, evaluate_by_cohort, px):
     # Evaluation by cohort
     df_test = df.iloc[-len(X_test):]
     cohort_metrics = evaluate_by_cohort(model, df_test, X_test, y_test)
-    
+
     fig_cohort = px.bar(
         cohort_metrics,
         x="cohort",
@@ -259,10 +271,10 @@ def __(mo):
 def __(model, X_test, compute_shap_values, get_top_drivers, plot_feature_importance):
     # Compute SHAP values
     explainer, shap_values = compute_shap_values(model, X_test, sample_size=1000)
-    
+
     # Get top drivers
     top_drivers = get_top_drivers(shap_values, X_test.columns.tolist(), n_top=10)
-    
+
     print("Top 10 Churn Drivers:")
     for driver in top_drivers:
         print(f"  {driver['rank']}. {driver['feature']}: {driver['importance']:.4f}")
@@ -292,19 +304,19 @@ def __(mo):
 def __(model, X_test, y_test, find_optimal_threshold, np, px):
     # Get probabilities
     y_proba = model.predict_proba(X_test)[:, 1]
-    
+
     # Find optimal threshold
     optimal_threshold, threshold_metrics = find_optimal_threshold(y_test, y_proba, method="f1")
-    
+
     print(f"Optimal Threshold: {optimal_threshold:.2f}")
     print(f"  Precision: {threshold_metrics['precision']:.3f}")
     print(f"  Recall: {threshold_metrics['recall']:.3f}")
     print(f"  F1: {threshold_metrics['f1']:.3f}")
-    
+
     # Precision-Recall curve
     from sklearn.metrics import precision_recall_curve
     precisions, recalls, thresholds = precision_recall_curve(y_test, y_proba)
-    
+
     fig_pr = px.line(
         x=recalls, y=precisions,
         labels={"x": "Recall", "y": "Precision"},
@@ -330,23 +342,22 @@ def __(mo):
 
 
 @app.cell
-def __(model, X_train):
+def __(model, X_train, PROJECT_ROOT):
     import joblib
-    from pathlib import Path
-    
-    # Save model
-    model_path = Path("../outputs/models/churn_model_v1.joblib")
+
+    # Save model using absolute paths
+    model_path = PROJECT_ROOT / "outputs" / "models" / "churn_model_v1.joblib"
     model_path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     joblib.dump(model, model_path)
-    
+
     # Save feature columns
     feature_path = model_path.with_suffix(".features.txt")
     with open(feature_path, "w") as f:
         f.write("\n".join(X_train.columns.tolist()))
-    
+
     print(f"Model saved to {model_path}")
-    return Path, feature_path, joblib, model_path
+    return feature_path, joblib, model_path
 
 
 @app.cell

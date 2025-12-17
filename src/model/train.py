@@ -87,9 +87,11 @@ def prepare_training_data(
     # Encode categoricals
     df = encode_categorical_features(df)
     
-    # Get feature columns (including encoded ones)
+    # Get feature columns (encoded columns are already numeric and included)
     feature_cols = get_feature_columns(df)
-    feature_cols.extend(["cohort_encoded", "ltv_tier_encoded", "contract_type_encoded"])
+    
+    # Remove duplicates while preserving order
+    feature_cols = list(dict.fromkeys(feature_cols))
     feature_cols = [c for c in feature_cols if c in df.columns]
     
     X = df[feature_cols].copy()

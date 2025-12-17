@@ -63,8 +63,9 @@ def evaluate_model(
     metrics["precision_at_20pct"] = precision_at_k(y, y_proba, k_pct=0.20)
     metrics["lift_at_10pct"] = lift_at_k(y, y_proba, k_pct=0.10)
     
-    # Confusion matrix
-    tn, fp, fn, tp = confusion_matrix(y, y_pred).ravel()
+    # Confusion matrix - handle single class case
+    cm = confusion_matrix(y, y_pred, labels=[0, 1])
+    tn, fp, fn, tp = cm.ravel()
     metrics["true_positives"] = int(tp)
     metrics["false_positives"] = int(fp)
     metrics["true_negatives"] = int(tn)

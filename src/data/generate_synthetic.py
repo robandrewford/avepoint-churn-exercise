@@ -38,7 +38,7 @@ def set_seed(seed: int) -> None:
 
 def generate_customer_id() -> str:
     """Generate unique customer ID."""
-    return str(uuid.uuid4())[:8].upper()
+    return str(uuid.uuid4()).upper()
 
 
 def assign_cohort(tenure_days: int) -> str:
@@ -349,7 +349,7 @@ def generate_support_tickets(
             daily_rate = monthly_rate / 30
             
             if np.random.random() < daily_rate:
-                ticket_id = f"TKT-{uuid.uuid4().hex[:8].upper()}"
+                ticket_id = f"TKT-{uuid.uuid4().hex.upper()}"
                 
                 # Category distribution
                 if is_churner and days_to_churn and days_to_churn < 45:
@@ -412,7 +412,7 @@ def generate_login_events(
     for _, row in daily_engagement.iterrows():
         if row["login_count"] > 0:
             for i in range(row["login_count"]):
-                event_id = f"EVT-{uuid.uuid4().hex[:8].upper()}"
+                event_id = f"EVT-{uuid.uuid4().hex.upper()}"
                 # Distribute logins throughout the day
                 hour = int(np.random.choice(range(8, 22)))  # 8am to 10pm
                 minute = int(np.random.randint(0, 60))
