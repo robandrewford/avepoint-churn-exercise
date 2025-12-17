@@ -187,7 +187,7 @@
                     { label: 'Churn Rate', value: '8-25%' },
                     { label: 'Time Range', value: '12 months' }
                 ],
-                cta: '📊 Open EDA Notebook →'
+                cta: 'Open EDA Notebook →'
             },
             {
                 id: 'data-3',
@@ -294,6 +294,89 @@
                 notebookUrl: '02_modeling.html'
             },
             {
+                id: 'model-7',
+                type: 'INTERVENTION_PLANS',
+                section: 'Part 3: Modeling',
+                title: 'Top 5 At-Risk Customers',
+                subtitle: 'Intervention Plans',
+                notebookUrl: '02_modeling.html',
+                customers: [
+                    {
+                        id: 'A2417884-8CA8-4BAE-BE18-CFD94371CE31',
+                        churn_probability: '97.7%',
+                        cohort: 'established',
+                        ltv_tier: 'smb',
+                        top_risks: [
+                            { arrow: '↑', feature: 'features_used_7d', value: '3.532' },
+                            { arrow: '↑', feature: 'tenure_days', value: '3.145' },
+                            { arrow: '↑', feature: 'features_used_30d', value: '2.377' }
+                        ],
+                        actions: [
+                            { emoji: '🟡', text: 'In-app guidance setup' }
+                        ]
+                    },
+                    {
+                        id: '3752A84A-0FE8-4850-977C-3E6A2FF5341E',
+                        churn_probability: '97.1%',
+                        cohort: 'established',
+                        ltv_tier: 'mid_market',
+                        top_risks: [
+                            { arrow: '↑', feature: 'features_used_7d', value: '3.415' },
+                            { arrow: '↑', feature: 'tenure_days', value: '3.289' },
+                            { arrow: '↑', feature: 'features_used_30d', value: '2.508' }
+                        ],
+                        actions: [
+                            { emoji: '🟡', text: 'In-app guidance setup' }
+                        ]
+                    },
+                    {
+                        id: '228891CA-BAE6-4D7B-8DF5-841268D6AFDF',
+                        churn_probability: '96.3%',
+                        cohort: 'established',
+                        ltv_tier: 'smb',
+                        top_risks: [
+                            { arrow: '↑', feature: 'features_used_7d', value: '5.534' },
+                            { arrow: '↑', feature: 'features_used_30d', value: '2.226' },
+                            { arrow: '↑', feature: 'session_minutes_30d', value: '1.011' }
+                        ],
+                        actions: [
+                            { emoji: '🔴', text: 'Executive escalation' },
+                            { emoji: '🟠', text: 'Quarterly business review' }
+                        ]
+                    },
+                    {
+                        id: '3EDD9090-05DE-48F7-A2DE-9B4D666011E9',
+                        churn_probability: '96.0%',
+                        cohort: 'established',
+                        ltv_tier: 'smb',
+                        top_risks: [
+                            { arrow: '↑', feature: 'features_used_7d', value: '4.428' },
+                            { arrow: '↑', feature: 'features_used_30d', value: '2.250' },
+                            { arrow: '↑', feature: 'tenure_days', value: '0.784' }
+                        ],
+                        actions: [
+                            { emoji: '🔴', text: 'Renewal discussion' },
+                            { emoji: '🟠', text: 'Retention discount' }
+                        ]
+                    },
+                    {
+                        id: '9307BFF1-4258-4C09-99B1-9391A32AB6DD',
+                        churn_probability: '96.0%',
+                        cohort: 'established',
+                        ltv_tier: 'mid_market',
+                        top_risks: [
+                            { arrow: '↑', feature: 'features_used_7d', value: '4.132' },
+                            { arrow: '↑', feature: 'features_used_30d', value: '2.225' },
+                            { arrow: '↑', feature: 'days_to_renewal', value: '1.300' }
+                        ],
+                        actions: [
+                            { emoji: '🔴', text: 'Renewal discussion' },
+                            { emoji: '🟠', text: 'Quarterly business review' }
+                        ]
+                    }
+                ]
+            },
+            {
                 id: 'model-4b',
                 type: 'NOTEBOOK_LINK',
                 section: 'Part 3: Modeling',
@@ -301,7 +384,7 @@
                 subtitle: 'Performance Metrics & SHAP Analysis',
                 description: 'Explore the full modeling notebook with actual holdout results, SHAP feature importance, calibration analysis, performance by cohort/LTV tier, and intervention recommendations.',
                 notebookUrl: '02_modeling.html',
-                cta: '🎯 Open Modeling Notebook →'
+                cta: 'Open Modeling Notebook →'
             },
             {
                 id: 'rec-1',
@@ -1104,6 +1187,59 @@
             </SlideLayout>
         );
 
+        // NEW: Intervention plans slide
+        const InterventionPlansSlide = ({ slide }) => (
+            <SlideLayout section={slide.section} title={slide.title} subtitle={slide.subtitle}>
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-3 pb-8 overflow-y-auto max-h-[600px]">
+                    {slide.customers.map((customer, idx) => (
+                        <div key={idx} className="bg-white p-4 rounded-lg border-2 border-red-200 shadow-md hover:shadow-xl transition-shadow">
+                            <div className="flex items-center gap-2 mb-3">
+                                <span className="text-2xl">🔴</span>
+                                <div className="text-xs font-bold text-red-600 uppercase">CRITICAL</div>
+                            </div>
+                            <div className="text-lg font-bold text-gray-900 mb-2 truncate" title={customer.id}>
+                                {customer.id.substring(0, 8)}...
+                            </div>
+                            <div className="text-2xl font-bold text-red-600 mb-3">
+                                {customer.churn_probability}
+                            </div>
+                            <div className="text-xs text-gray-600 mb-3">
+                                <div><span className="font-semibold">Cohort:</span> {customer.cohort}</div>
+                                <div><span className="font-semibold">LTV:</span> {customer.ltv_tier}</div>
+                            </div>
+                            <div className="mb-3">
+                                <div className="text-xs font-bold text-gray-500 uppercase mb-1">Top Risks</div>
+                                {customer.top_risks.slice(0, 3).map((risk, ridx) => (
+                                    <div key={ridx} className="text-xs text-gray-700 truncate" title={`${risk.feature}: ${risk.value}`}>
+                                        {risk.arrow} {risk.feature.split('_')[0]}... {risk.value}
+                                    </div>
+                                ))}
+                            </div>
+                            <div>
+                                <div className="text-xs font-bold text-gray-500 uppercase mb-1">Actions</div>
+                                {customer.actions.slice(0, 2).map((action, aidx) => (
+                                    <div key={aidx} className="text-xs flex items-start gap-1 mb-1">
+                                        <span>{action.emoji}</span>
+                                        <span className="truncate" title={action.text}>{action.text}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                <div className="text-center bg-gray-50 p-4 rounded-lg">
+                    <a
+                        href={slide.notebookUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-red-600 hover:text-red-700 font-bold text-lg hover:underline"
+                    >
+                        View Full Intervention Analysis →
+                    </a>
+                </div>
+            </SlideLayout>
+        );
+
         // --- Main App ---
 
         function Presentation() {
@@ -1186,6 +1322,7 @@
                         {slide.type === 'TESTING_FRAMEWORK' && <TestingFrameworkSlide slide={slide} />}
                         {slide.type === 'DASHBOARD_LINK' && <DashboardLinkSlide slide={slide} />}
                         {slide.type === 'NOTEBOOK_LINK_WITH_METRICS' && <NotebookLinkWithMetricsSlide slide={slide} />}
+                        {slide.type === 'INTERVENTION_PLANS' && <InterventionPlansSlide slide={slide} />}
 
                     </div>
 
