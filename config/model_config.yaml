@@ -1,0 +1,92 @@
+# Churn Prediction Configuration
+
+data:
+  n_customers: 50000
+  n_months_history: 12
+  random_seed: 42
+  
+  # Cohort definitions
+  cohorts:
+    new_user:
+      tenure_days_max: 30
+      observation_window_days: 14
+      prediction_horizon_days: 30
+      base_churn_rate: 0.25
+    established:
+      tenure_days_min: 31
+      tenure_days_max: 180
+      observation_window_days: 30
+      prediction_horizon_days: 30
+      base_churn_rate: 0.12
+    mature:
+      tenure_days_min: 181
+      observation_window_days: 60
+      prediction_horizon_days: 90
+      base_churn_rate: 0.08
+  
+  # LTV tier definitions
+  ltv_tiers:
+    smb:
+      proportion: 0.60
+      monthly_revenue_range: [200, 800]
+      weight: 1.0
+    mid_market:
+      proportion: 0.30
+      monthly_revenue_range: [1500, 5000]
+      weight: 3.0
+    enterprise:
+      proportion: 0.10
+      monthly_revenue_range: [10000, 30000]
+      weight: 10.0
+
+model:
+  lgbm:
+    objective: binary
+    metric: average_precision
+    boosting_type: gbdt
+    num_leaves: 31
+    max_depth: 6
+    learning_rate: 0.05
+    n_estimators: 500
+    min_child_samples: 20
+    subsample: 0.8
+    colsample_bytree: 0.8
+    reg_alpha: 0.1
+    reg_lambda: 0.1
+    random_state: 42
+    verbose: -1
+  
+  training:
+    early_stopping_rounds: 50
+    n_cv_folds: 5
+    test_size_days: 30
+    gap_days: 0
+
+evaluation:
+  thresholds:
+    auc_pr_target: 0.5
+    precision_at_10_target: 0.70
+    recall_target: 0.60
+    lead_time_days_target: 45
+  
+  business:
+    intervention_cost: 50
+    save_rate_assumption: 0.4
+
+monitoring:
+  data_quality:
+    max_freshness_hours: 24
+    max_missing_rate: 0.05
+    psi_warning_threshold: 0.1
+    psi_critical_threshold: 0.2
+  
+  model_health:
+    ks_warning_threshold: 0.1
+    auc_pr_min_threshold: 0.4
+    calibration_max_increase: 0.2
+
+paths:
+  data_raw: "data_raw_kaggle.csv"
+  synthetic_output: "outputs/synthetic_data"
+  models: "outputs/models"
+  figures: "outputs/figures"
