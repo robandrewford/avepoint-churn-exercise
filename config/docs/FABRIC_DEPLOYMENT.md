@@ -17,7 +17,7 @@ This document maps the DuckDB-based local implementation to Microsoft Fabric for
 
 ## Step 1: Create Fabric Workspace
 
-```
+```m
 1. Navigate to app.fabric.microsoft.com
 2. Create new Workspace: "churn-prediction-prod"
 3. Enable Fabric capacity (Trial/Premium/Fabric)
@@ -27,7 +27,7 @@ This document maps the DuckDB-based local implementation to Microsoft Fabric for
 
 ## Step 2: Create Lakehouse
 
-```
+```m
 1. In workspace, select "New" → "Lakehouse"
 2. Name: "churn_lakehouse"
 3. This creates:
@@ -41,6 +41,7 @@ This document maps the DuckDB-based local implementation to Microsoft Fabric for
 ## Step 3: Upload Data
 
 ### Option A: Direct Upload
+
 ```python
 # In Fabric notebook
 from pyspark.sql import SparkSession
@@ -51,7 +52,8 @@ df.write.format("delta").saveAsTable("bronze.customers")
 ```
 
 ### Option B: Data Pipeline
-```
+
+```m
 1. Create Data Pipeline
 2. Source: Local files or cloud storage
 3. Destination: Lakehouse tables
@@ -319,7 +321,7 @@ spark.createDataFrame(df).write.format("delta").mode("overwrite").saveAsTable("g
 
 ## Step 10: Create Power BI Dashboard
 
-```
+```m
 1. Connect Power BI to Lakehouse SQL endpoint
 2. Import tables:
    - gold.churn_predictions
@@ -335,7 +337,7 @@ spark.createDataFrame(df).write.format("delta").mode("overwrite").saveAsTable("g
 
 ## Step 11: Schedule Pipelines
 
-```
+```m
 1. Create Data Pipeline: "churn-daily-pipeline"
 2. Add activities:
    - Notebook: 01_bronze_to_silver (if data refresh)
@@ -401,7 +403,7 @@ SUM(CASE WHEN activity_date >= date_sub('{date}', 7) THEN login_count ELSE 0 END
 
 ## Files to Deploy
 
-```
+```m
 churn-prediction-fabric/
 ├── notebooks/
 │   ├── 01_bronze_to_silver.py
@@ -415,12 +417,14 @@ churn-prediction-fabric/
 ```
 
 The local DuckDB implementation serves as:
+
 1. Development environment
 2. Unit testing
 3. Demo for stakeholders
 4. Interview presentation
 
 The Fabric deployment is production-ready with:
+
 1. Scalability (Spark)
 2. Governance (OneLake)
 3. MLOps (MLflow)
