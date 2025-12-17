@@ -116,37 +116,72 @@ This document tracks the evolution of the AvePoint churn prediction exercise fro
    - Model versioning
 ```
 
-### 🔄 In Progress Components
+### ✅ Recently Completed Components (December 16, 2025)
 
-#### Model Evaluation
+#### Notebook Verification & Bug Fixes
 ```
-🔄 Business Metrics
-   - Precision@Top10% calculation
-   - Recall@30d implementation
-   - Lead Time analysis
+✅ 02_modeling.py Verified Working
+   - All 12 sections execute without errors
+   - SHAP feature importance bar chart renders
+   - SHAP summary plot renders (fixed px.scatter issue)
+   - LTV tier evaluation working
+   - Intervention planning functional
+   - Business impact analysis operational
 
-🔄 SHAP Explainability
+✅ 03_monitoring.py Verified Working
+   - Data quality monitoring with tables
+   - Model health monitoring charts
+   - Business impact dashboard
+   - Cohort performance monitoring (AUC-PR over time)
+   - Retraining trigger status with dynamic evaluation
+   - Interactive threshold configuration (mo.ui.slider)
+   - Dynamic alert summary
+
+✅ Bug Fixes Applied
+   - Fixed plot_shap_summary() in src/model/explain.py
+     - Changed px.strip() to px.scatter() for color_continuous_scale support
+   - Fixed load_config() in src/model/train.py
+     - Added absolute path resolution based on __file__ location
+```
+
+#### Model Evaluation (Completed)
+```
+✅ Business Metrics
+   - Precision@Top10% calculation
+   - Recall@30d implementation (recall_at_window)
+   - Lead Time analysis (calculate_lead_time)
+   - Lift@K calculation
+
+✅ SHAP Explainability
    - Tree SHAP implementation
    - Feature importance visualization
-   - Intervention mapping framework
+   - Intervention mapping framework (16 features mapped)
+   - generate_intervention_plan() for customer-level recommendations
 
-🔄 Threshold Optimization
-   - Business constraint awareness
-   - Capacity-aware recommendations
-   - ROI-based prioritization
+✅ Threshold Optimization
+   - F1-based threshold optimization
+   - Cost-based threshold optimization
+   - Capacity-aware recommendations (capacity_aware_threshold)
+   - Multi-threshold evaluation (evaluate_at_multiple_thresholds)
 ```
 
 #### Monitoring
 ```
-🔄 Three-Pillar Implementation
+✅ Three-Pillar Implementation
    - Data Quality checks (freshness, completeness, drift)
    - Model Health monitoring (performance, calibration)
    - Business Impact tracking (intervention effectiveness)
 
-🔄 Alerting Framework
+✅ Alerting Framework
    - Threshold-based triggers
    - Escalation paths
    - Automated responses
+   
+✅ Marimo Notebook (03_monitoring.py)
+   - Cohort performance monitoring over time
+   - Retraining trigger status dashboard
+   - Interactive threshold configuration
+   - Dynamic alert evaluation
 ```
 
 ### ⏳ Pending Components

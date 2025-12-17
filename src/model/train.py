@@ -26,8 +26,20 @@ from sklearn.model_selection import StratifiedKFold
 from src.utils.temporal_split import TimeSeriesSplitter, validate_no_leakage
 
 
-def load_config(config_path: str = "config/model_config.yaml") -> dict:
-    """Load model configuration."""
+def load_config(config_path: str | None = None) -> dict:
+    """Load model configuration.
+    
+    Args:
+        config_path: Path to config file. If None, uses default project config.
+        
+    Returns:
+        Configuration dictionary
+    """
+    if config_path is None:
+        # Resolve relative to project root (src/model/train.py → ../../config)
+        project_root = Path(__file__).parent.parent.parent
+        config_path = project_root / "config" / "model_config.yaml"
+    
     with open(config_path) as f:
         return yaml.safe_load(f)
 

@@ -4,6 +4,8 @@
 
 This document captures the current state of the AvePoint churn prediction exercise and outlines immediate next steps for completion and presentation preparation.
 
+**Last Updated**: December 16, 2025 (11:37 PM PST)
+
 ## Project Status Overview
 
 ### Current Implementation State
@@ -16,11 +18,13 @@ This document captures the current state of the AvePoint churn prediction exerci
 - **Model Training**: LightGBM with LTV-weighted learning
 - **Configuration**: Centralized YAML configuration system
 - **Documentation**: Comprehensive project documentation and plans
-
-**🔄 In Progress**:
-- **Model Evaluation**: Business metrics and SHAP explainability
-- **Monitoring Framework**: Three-pillar monitoring implementation
-- **Notebook Completion**: Marimo notebooks for EDA, modeling, and monitoring
+- **Model Evaluation**: Business metrics (Precision@K, Recall@Window, Lead Time, Lift@K)
+- **Threshold Optimization**: F1-based, cost-based, and capacity-aware threshold selection
+- **SHAP Explainability**: Tree SHAP with intervention mapping (16 features → actions)
+- **Marimo Notebooks**: All three notebooks complete and enhanced
+  - `01_eda.py`: Exploratory data analysis with interactive profiling
+  - `02_modeling.py`: Complete ML pipeline with SHAP→intervention mapping, LTV evaluation, business impact
+  - `03_monitoring.py`: Three-pillar monitoring with cohort tracking, retraining triggers, interactive thresholds
 
 **⏳ Pending**:
 - **Fabric Integration**: Translation guide and deployment patterns
@@ -77,9 +81,9 @@ This document captures the current state of the AvePoint churn prediction exerci
 ✅ LightGBM model training with LTV weights
 ✅ Temporal time series cross-validation
 ✅ Class imbalance handling via sample weights
-🔄 Business metrics evaluation (Precision@Top10%, Recall@30d)
-🔄 SHAP explainability integration
-⏳ Threshold optimization for business constraints
+✅ Business metrics evaluation (Precision@K, Recall@Window, Lead Time, Lift@K)
+✅ SHAP explainability integration with intervention mapping
+✅ Threshold optimization (F1-based, cost-based, capacity-aware)
 ```
 
 ## Immediate Next Steps (Priority Order)

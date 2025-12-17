@@ -258,14 +258,26 @@ shap.force_plot(explainer.expected_value, shap_values[i], X_test.iloc[i])
 
 ### Intervention Mapping
 
-**SHAP → Action Translation**:
+**SHAP → Action Translation** (16 features mapped):
 
-| SHAP Driver | Business Meaning | Recommended Action |
-|-------------|------------------|-------------------|
-| `login_velocity_wow < 0` | Usage declining | Re-engagement campaign |
-| `features_used_30d ↓` | Low adoption | Feature training session |
-| `tickets_30d ↑` | Product friction | Proactive support check |
-| `days_to_renewal < 30` | Contract ending | Strategic account review |
+| SHAP Driver | Business Meaning | Recommended Action | Priority |
+|-------------|------------------|-------------------|----------|
+| `logins_7d < 2` | Low engagement | Re-engagement campaign | High |
+| `login_velocity_wow < -0.3` | Usage declining | Proactive CSM call | Critical |
+| `feature_adoption_pct < 0.3` | Low adoption | Product training session | High |
+| `tickets_30d > 3` | Product friction | Escalation to support lead | High |
+| `avg_sentiment_30d < -0.3` | Negative sentiment | Executive escalation | Critical |
+| `days_to_renewal < 30` | Contract ending | Renewal discussion | Critical |
+| `onboarding_completion_pct < 0.3` | Poor onboarding | Onboarding rescue call | Critical |
+| `days_since_last_login > 14` | Dormant account | Win-back campaign | Critical |
+
+**Intervention Categories**:
+- **Engagement**: logins_7d, logins_14d, logins_30d, days_since_last_login
+- **Adoption**: feature_adoption_pct, features_used_7d
+- **Velocity**: login_velocity_wow, login_trend_4w
+- **Support**: tickets_30d, avg_sentiment_30d, escalation_rate_30d
+- **Contract**: days_to_renewal, contract_value_remaining
+- **Activation**: onboarding_completion_pct, days_to_first_login, first_week_logins
 
 ## Monitoring & Production
 
