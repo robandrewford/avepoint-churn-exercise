@@ -1,30 +1,19 @@
-# Churn Prediction Configuration
+# Model Configuration for Churn Prediction
+# AvePoint Principal Applied Scientist Exercise
 
 data:
+  # Synthetic data parameters
   n_customers: 50000
   n_months_history: 12
   random_seed: 42
   
-  # Cohort definitions
-  cohorts:
-    new_user:
-      tenure_days_max: 30
-      observation_window_days: 14
-      prediction_horizon_days: 30
-      base_churn_rate: 0.25
-    established:
-      tenure_days_min: 31
-      tenure_days_max: 180
-      observation_window_days: 30
-      prediction_horizon_days: 30
-      base_churn_rate: 0.12
-    mature:
-      tenure_days_min: 181
-      observation_window_days: 60
-      prediction_horizon_days: 90
-      base_churn_rate: 0.08
+  # Churn rates by cohort (baseline)
+  churn_rates:
+    new_user: 0.25      # Higher churn for new users
+    established: 0.12   # Moderate for established
+    mature: 0.08        # Lower for mature
   
-  # LTV tier definitions
+  # LTV distribution
   ltv_tiers:
     smb:
       proportion: 0.60
@@ -39,7 +28,48 @@ data:
       monthly_revenue_range: [10000, 30000]
       weight: 10.0
 
+cohorts:
+  # Cohort definitions (tenure in days)
+  new_user:
+    min_tenure: 0
+    max_tenure: 30
+    observation_window: 14
+    prediction_horizon: 30
+  established:
+    min_tenure: 31
+    max_tenure: 180
+    observation_window: 30
+    prediction_horizon: 30
+  mature:
+    min_tenure: 181
+    max_tenure: null  # No upper bound
+    observation_window: 60
+    prediction_horizon: 90
+
+features:
+  # Feature window configurations
+  windows:
+    short: 7
+    medium: 14
+    long: 30
+    extended: 60
+  
+  # Aggregation functions
+  aggregations:
+    - count
+    - sum
+    - mean
+    - std
+    - min
+    - max
+    - last
+  
+  # Velocity calculation
+  velocity:
+    comparison_window: 7  # Compare week-over-week
+
 model:
+  # LightGBM parameters
   lgbm:
     objective: binary
     metric: average_precision
@@ -53,40 +83,49 @@ model:
     colsample_bytree: 0.8
     reg_alpha: 0.1
     reg_lambda: 0.1
-    random_state: 42
+    early_stopping_rounds: 50
     verbose: -1
   
-  training:
-    early_stopping_rounds: 50
-    n_cv_folds: 5
-    test_size_days: 30
-    gap_days: 0
+  # Class imbalance handling
+  class_weight: balanced
+  use_sample_weights: true  # Weight by LTV
 
 evaluation:
-  thresholds:
-    auc_pr_target: 0.5
-    precision_at_10_target: 0.70
-    recall_target: 0.60
-    lead_time_days_target: 45
+  # Metrics targets
+  targets:
+    auc_pr: 0.5
+    precision_at_10pct: 0.70
+    recall_at_30d: 0.60
+    lead_time_days: 45
   
-  business:
-    intervention_cost: 50
-    save_rate_assumption: 0.4
+  # Threshold selection
+  threshold_method: precision_recall_tradeoff
+  default_threshold: 0.5
+  
+  # Cross-validation
+  cv:
+    n_splits: 5
+    temporal: true  # Use time-series split
+
+mlflow:
+  experiment_name: churn-prediction
+  tracking_uri: null  # Use default (Fabric managed)
+  autolog: true
+  log_models: true
 
 monitoring:
-  data_quality:
-    max_freshness_hours: 24
-    max_missing_rate: 0.05
-    psi_warning_threshold: 0.1
-    psi_critical_threshold: 0.2
+  # Drift detection thresholds
+  psi_threshold: 0.2
+  ks_threshold: 0.1
   
-  model_health:
-    ks_warning_threshold: 0.1
-    auc_pr_min_threshold: 0.4
-    calibration_max_increase: 0.2
+  # Alerting
+  alert_on_drift: true
+  alert_on_performance_drop: true
+  performance_drop_threshold: 0.10  # 10% relative drop
 
 paths:
-  data_raw: "data_raw_kaggle.csv"
-  synthetic_output: "outputs/synthetic_data"
-  models: "outputs/models"
-  figures: "outputs/figures"
+  data_raw: data_raw_kaggle.csv
+  data_synthetic: outputs/synthetic_data.parquet
+  database: outputs/churn_lakehouse.duckdb
+  models: outputs/models/
+  figures: outputs/figures/

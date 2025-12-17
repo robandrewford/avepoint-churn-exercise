@@ -21,7 +21,7 @@ This project implements a complete ML pipeline for SaaS customer churn predictio
 
 ```m
 churn_prediction/
-├── pyproject.toml          # uv dependencies
+├── pyproject.toml                 # uv dependencies
 ├── README.md
 ├── docs/
 │   └── PLAN.md                    # Comprehensive exercise plan

@@ -229,6 +229,7 @@ source = { editable = "." }
 dependencies = [
     { name = "duckdb" },
     { name = "lightgbm" },
+    { name = "marimo" },
     { name = "mlflow" },
     { name = "numpy" },
     { name = "pandas" },
@@ -260,6 +261,7 @@ dev = [
 requires-dist = [
     { name = "duckdb", specifier = ">=1.0.0" },
     { name = "lightgbm", specifier = ">=4.0.0" },
+    { name = "marimo", specifier = ">=0.18.4" },
     { name = "marimo", marker = "extra == 'dev'", specifier = ">=0.6.0" },
     { name = "mlflow", specifier = ">=2.10.0" },
     { name = "numpy", specifier = ">=1.24.0" },
