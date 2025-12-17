@@ -414,8 +414,8 @@ def generate_login_events(
             for i in range(row["login_count"]):
                 event_id = f"EVT-{uuid.uuid4().hex[:8].upper()}"
                 # Distribute logins throughout the day
-                hour = np.random.choice(range(8, 22))  # 8am to 10pm
-                minute = np.random.randint(0, 60)
+                hour = int(np.random.choice(range(8, 22)))  # 8am to 10pm
+                minute = int(np.random.randint(0, 60))
                 
                 event_timestamp = datetime.combine(
                     row["activity_date"],

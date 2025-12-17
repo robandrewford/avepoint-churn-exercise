@@ -46,10 +46,12 @@ def main():
     customers = pd.read_parquet(data_dir / "customers.parquet")
     daily_engagement = pd.read_parquet(data_dir / "daily_engagement.parquet")
     support_tickets = pd.read_parquet(data_dir / "support_tickets.parquet")
+    login_events = pd.read_parquet(data_dir / "login_events.parquet")
     
     print(f"  Customers: {len(customers):,}")
     print(f"  Daily engagement: {len(daily_engagement):,}")
     print(f"  Support tickets: {len(support_tickets):,}")
+    print(f"  Login events: {len(login_events):,}")
     
     # Initialize lakehouse
     print("\n[2/5] Initializing lakehouse...")
@@ -58,13 +60,29 @@ def main():
     # Prepare customer data for bronze layer
     print("\n[3/5] Loading Bronze layer...")
     
-    # Map customer columns to bronze schema
-    customers_bronze = customers.rename(columns={
-        "partner": "partner",
-        "dependents": "dependents", 
-        "phone_service": "phone_service",
-        "paperless_billing": "paperless_billing",
-    })
+    # Add total_charges (not in synthetic data, so calculate it)
+    customers_bronze = customers.copy()
+    customers_bronze["total_charges"] = customers_bronze["monthly_charges"] * customers_bronze["tenure_days"] / 30.0
+    
+    # Deduplicate by customer_id (keep first occurrence)
+    n_before = len(customers_bronze)
+    customers_bronze = customers_bronze.drop_duplicates(subset=["customer_id"], keep="first")
+    n_after = len(customers_bronze)
+    if n_before != n_after:
+        print(f"  Warning: Removed {n_before - n_after} duplicate customer_ids")
+    
+    # Bronze schema expects columns in this EXACT order (22 columns)
+    bronze_columns = [
+        "customer_id", "signup_date", "contract_type", "monthly_charges", 
+        "total_charges", "payment_method", "gender", "senior_citizen", 
+        "partner", "dependents", "phone_service", "multiple_lines", 
+        "internet_service", "online_security", "online_backup", 
+        "device_protection", "tech_support", "streaming_tv",
+        "streaming_movies", "paperless_billing", "churn_label", "churn_date"
+    ]
+    
+    # Filter to bronze schema columns in correct order
+    customers_bronze = customers_bronze[bronze_columns]
     
     # Ensure boolean columns are correct type
     bool_cols = ["senior_citizen", "partner", "dependents", "phone_service", "paperless_billing"]
@@ -73,12 +91,37 @@ def main():
             customers_bronze[col] = customers_bronze[col].fillna(False).astype(bool)
     
     lakehouse.load_bronze_customers(customers_bronze)
-    lakehouse.load_bronze_tickets(support_tickets)
+    
+    # Deduplicate support tickets by ticket_id
+    n_tickets_before = len(support_tickets)
+    support_tickets_dedup = support_tickets.drop_duplicates(subset=["ticket_id"], keep="first")
+    n_tickets_after = len(support_tickets_dedup)
+    if n_tickets_before != n_tickets_after:
+        print(f"  Warning: Removed {n_tickets_before - n_tickets_after} duplicate ticket_ids")
+    
+    lakehouse.load_bronze_tickets(support_tickets_dedup)
+    
+    # Deduplicate login events by event_id
+    n_events_before = len(login_events)
+    login_events_dedup = login_events.drop_duplicates(subset=["event_id"], keep="first")
+    n_events_after = len(login_events_dedup)
+    if n_events_before != n_events_after:
+        print(f"  Warning: Removed {n_events_before - n_events_after} duplicate event_ids")
+    
+    lakehouse.load_bronze_events(login_events_dedup)
     
     # Transform to Silver
     print("\n[4/5] Transforming to Silver layer...")
     lakehouse.transform_to_silver_customers()
-    lakehouse.load_silver_daily_engagement(daily_engagement)
+    
+    # Deduplicate daily engagement by (customer_id, activity_date)
+    n_engagement_before = len(daily_engagement)
+    daily_engagement_dedup = daily_engagement.drop_duplicates(subset=["customer_id", "activity_date"], keep="first")
+    n_engagement_after = len(daily_engagement_dedup)
+    if n_engagement_before != n_engagement_after:
+        print(f"  Warning: Removed {n_engagement_before - n_engagement_after} duplicate engagement records")
+    
+    lakehouse.load_silver_daily_engagement(daily_engagement_dedup)
     lakehouse.transform_to_silver_tickets()
     
     # Build Gold layer (Customer 360)

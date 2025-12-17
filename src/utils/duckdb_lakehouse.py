@@ -132,9 +132,20 @@ class DuckDBLakehouse:
             SELECT 
                 customer_id,
                 signup_date,
-                tenure_days,
-                cohort,
-                ltv_tier,
+                -- Calculate tenure_days from signup to latest churn_date or today
+                DATE_DIFF('day', signup_date, COALESCE(churn_date, CURRENT_DATE)) AS tenure_days,
+                -- Assign cohort based on tenure
+                CASE 
+                    WHEN DATE_DIFF('day', signup_date, COALESCE(churn_date, CURRENT_DATE)) <= 30 THEN 'new_user'
+                    WHEN DATE_DIFF('day', signup_date, COALESCE(churn_date, CURRENT_DATE)) <= 180 THEN 'established'
+                    ELSE 'mature'
+                END AS cohort,
+                -- Assign LTV tier based on monthly_charges
+                CASE 
+                    WHEN monthly_charges < 800 THEN 'smb'
+                    WHEN monthly_charges < 5000 THEN 'mid_market'
+                    ELSE 'enterprise'
+                END AS ltv_tier,
                 contract_type,
                 CASE contract_type
                     WHEN 'Month-to-month' THEN 1
@@ -143,7 +154,8 @@ class DuckDBLakehouse:
                     ELSE 1
                 END AS contract_months,
                 monthly_charges,
-                estimated_ltv,
+                -- Calculate estimated LTV
+                monthly_charges * 12.0 * 1.2 AS estimated_ltv,
                 COALESCE(phone_service, FALSE) AS has_phone,
                 internet_service != 'No' AND internet_service IS NOT NULL AS has_internet,
                 CASE WHEN internet_service = 'No' THEN NULL ELSE internet_service END AS internet_type,
@@ -292,13 +304,13 @@ class DuckDBLakehouse:
                 
                 -- Recency features
                 COALESCE(
-                    EXTRACT(DAY FROM ($prediction_date - MAX(CASE WHEN e.login_count > 0 THEN e.activity_date END))),
+                    DATE_DIFF('day', MAX(CASE WHEN e.login_count > 0 THEN e.activity_date END), $prediction_date),
                     999
-                )::INTEGER AS days_since_last_login,
+                ) AS days_since_last_login,
                 COALESCE(
-                    EXTRACT(DAY FROM ($prediction_date - MAX(CASE WHEN e.features_used > 0 THEN e.activity_date END))),
+                    DATE_DIFF('day', MAX(CASE WHEN e.features_used > 0 THEN e.activity_date END), $prediction_date),
                     999
-                )::INTEGER AS days_since_last_feature_use
+                ) AS days_since_last_feature_use
                 
             FROM silver.daily_engagement e
             WHERE e.activity_date < $prediction_date
@@ -363,7 +375,7 @@ class DuckDBLakehouse:
         activation_features AS (
             SELECT 
                 c.customer_id,
-                MIN(CASE WHEN e.login_count > 0 THEN EXTRACT(DAY FROM (e.activity_date - c.signup_date)) END)::INTEGER AS days_to_first_login,
+                MIN(CASE WHEN e.login_count > 0 THEN DATE_DIFF('day', c.signup_date, e.activity_date) END) AS days_to_first_login,
                 -- Onboarding completion approximated by first week feature usage
                 COALESCE(
                     SUM(CASE WHEN e.activity_date <= c.signup_date + INTERVAL '7 days' THEN e.unique_features ELSE 0 END) / 15.0,

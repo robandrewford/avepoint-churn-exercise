@@ -1,7 +1,9 @@
-Presentation Deck: Churn: From Prediction To Retention, A Cohort-Aware, LTV-Weighted Approach for Enterprise SaaS
+# Presentation Deck: Churn: From Prediction To Retention
+
 Time: 30 Minutes (20 min presentation, 10 min Q&A)
 
-Slide 1: Title Slide
+## Slide 1: Title Slide
+
 Visual: Clean white background. AvePoint red accent bar on the left. Large bold title.
 
 Title: Churn Prediction & Retention Strategy

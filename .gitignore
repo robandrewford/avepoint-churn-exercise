@@ -1,0 +1,29 @@
+# Generated large files
+outputs/synthetic_data/*.parquet
+outputs/churn_lakehouse.duckdb
+outputs/models/*.joblib
+outputs/models/*.pkl
+outputs/figures/*.png
+outputs/figures/*.html
+outputs/figures/*.pdf
+
+# Data files (keep raw data, ignore large derived files)
+*.parquet
+*.duckdb
+*.sqlite
+*.db
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo

@@ -10,7 +10,7 @@ Runs the complete pipeline:
 5. Save artifacts
 
 Usage:
-    uv run python scripts/run_pipeline.py
+    uv run python src/utils/run_pipeline.py
 """
 
 import sys
@@ -41,7 +41,7 @@ def main():
     print("STEP 2: Build Lakehouse")
     print("=" * 70)
     
-    from scripts.build_lakehouse import main as build_lakehouse
+    from src.utils.build_lakehouse import main as build_lakehouse
     build_lakehouse()
     
     # Step 3: Train model

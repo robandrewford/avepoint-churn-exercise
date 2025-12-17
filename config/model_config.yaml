@@ -124,7 +124,7 @@ monitoring:
   performance_drop_threshold: 0.10  # 10% relative drop
 
 paths:
-  data_raw: data_raw_kaggle.csv
+  data_raw: src/data/data_raw_kaggle.csv
   data_synthetic: outputs/synthetic_data.parquet
   database: outputs/churn_lakehouse.duckdb
   models: outputs/models/
