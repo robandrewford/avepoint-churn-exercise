@@ -1,6 +1,7 @@
 # Microsoft Fabric Deployment Guide
 
-This document maps the DuckDB-based local implementation to Microsoft Fabric for production deployment.
+This document maps local DuckDB implementation to Microsoft Fabric for 
+production deployment, with step-by-step instructions and code examples.
 
 ## Architecture Translation
 
@@ -10,8 +11,22 @@ This document maps the DuckDB-based local implementation to Microsoft Fabric for
 | DuckDB schemas (bronze/silver/gold) | Lakehouse schemas | Same medallion architecture |
 | Python scripts | Synapse Notebooks | Same Python code, Spark optional |
 | MLflow tracking | Fabric MLflow | Managed MLflow, auto-configured |
-| Parquet files | Delta tables | Same columnar format, add ACID |
+| Parquet files | Delta tables | Same columnar format, add ACID transactions |
 | Marimo notebooks | Fabric Notebooks | Convert to standard notebooks |
+| SQL queries | Synapse SQL | Nearly identical syntax |
+| `INTERVAL '7 days'` | `INTERVAL 7 DAY` or `date_sub(col, 7)` | Minor syntax differences |
+
+### Why Fabric for AvePoint
+
+| AvePoint Context | Fabric Capability | Value |
+|---------|-------------------|-------|
+| Microsoft ecosystem customer base | Native M365 integration | No additional infrastructure for customers |
+| Data governance focus | OneLake unified governance | Single security model across all data |
+| Rapid prototyping need | Notebooks + Pipelines in one workspace | Fast iteration without DevOps overhead |
+| Enterprise customers | Power BI embedded | Dashboards customers already trust |
+| Multi-tenant SaaS | Workspace isolation | Per-customer or per-segment deployments |
+| Cost optimization needs | Delta Lake caching, Z-order clustering, Spark for large scale | Optimize for production workloads |
+| Security considerations | Row-level security, column masking, service principals | Enterprise-grade security and compliance |
 
 ---
 
@@ -45,6 +60,7 @@ This document maps the DuckDB-based local implementation to Microsoft Fabric for
 ```python
 # In Fabric notebook
 from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
 
 # Upload Parquet files to Files section, then:
 df = spark.read.parquet("Files/synthetic_data/customers.parquet")
@@ -93,6 +109,7 @@ Create notebook: `01_bronze_to_silver.py`
 
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
+from datetime import date, timedelta
 
 spark = SparkSession.builder.getOrCreate()
 
@@ -165,21 +182,23 @@ engagement_features = engagement.filter(
                  F.col("login_count")).otherwise(0)).alias("logins_7d"),
     F.sum(F.when(F.col("activity_date") >= F.date_sub(F.lit(prediction_date), 30), 
                  F.col("login_count")).otherwise(0)).alias("logins_30d"),
+    
     # Recency
     F.datediff(F.lit(prediction_date), F.max("activity_date")).alias("days_since_last_login"),
+    
     # Depth
     F.sum(F.col("features_used")).alias("total_features_used"),
-    # Intensity
-    F.sum(F.col("session_duration_minutes")).alias("total_session_minutes")
+    F.avg(F.col("session_duration_minutes")).alias("avg_session_duration")
 )
 
 # Build support features
 support_features = tickets.filter(
     F.col("created_date") < F.lit(prediction_date)
+    AND F.col("created_date") >= F.date_sub(F.lit(prediction_date), 30)
 ).groupBy("customer_id").agg(
-    F.sum(F.when(F.col("created_date") >= F.date_sub(F.lit(prediction_date), 30), 1)
-          .otherwise(0)).alias("tickets_30d"),
-    F.avg("sentiment_score").alias("avg_sentiment")
+    F.sum(F.when(F.col("escalated"), 1).otherwise(0)).alias("escalation_rate_30d"),
+    F.avg("sentiment_score")).alias("avg_sentiment_30d"),
+    F.avg(F.when(F.col("escalated"), 1).otherwise(0)).alias("avg_resolution_days_30d")
 )
 
 # Join to create Customer 360
@@ -190,12 +209,12 @@ customer_360 = customers.join(
 ).select(
     "*",
     F.lit(prediction_date).alias("prediction_date"),
+    
     # Target: churned within 30 days of prediction date
     F.when(
         (F.col("churn_date").isNotNull()) & 
         (F.col("churn_date") > F.lit(prediction_date)) &
-        (F.col("churn_date") <= F.date_add(F.lit(prediction_date), 30)),
-        True
+        (F.col("churn_date") <= F.date_add(F.lit(prediction_date), 30))
     ).otherwise(False).alias("churned_in_window")
 )
 
@@ -219,70 +238,99 @@ from sklearn.model_selection import train_test_split
 import lightgbm as lgb
 import pandas as pd
 
-# Fabric auto-configures MLflow - just set experiment
+# Set experiment
 mlflow.set_experiment("churn-prediction")
 
 # Load data
 df = spark.table("gold.customer_360").toPandas()
 
-# Prepare features (same as local implementation)
+# Prepare features
 feature_cols = [
     "logins_7d", "logins_30d", "days_since_last_login",
-    "total_features_used", "total_session_minutes",
-    "tickets_30d", "avg_sentiment", "tenure_days"
+    "total_features_used", "avg_session_duration",
+    "escalation_rate_30d", "avg_sentiment_30d",
+    "tenure_days", "cohort", "ltv_tier",
+    "contract_months", "monthly_charges", "estimated_ltv"
 ]
 
 X = df[feature_cols].fillna(0)
 y = df["churned_in_window"].astype(int)
 
+# Train test split
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42
+    X, y, test_size=0.2, random_state=42, 
+    stratify=y  # Cohort-aware split
 )
+
+# Calculate sample weights
+def calculate_sample_weights(df):
+    weight_map = {"smb": 1.0, "mid_market": 3.0, "enterprise": 10.0}
+    return df["ltv_tier"].map(weight_map).fillna(1.0)
+
+sample_weights = calculate_sample_weights(X_train)
 
 # Train with MLflow tracking
 with mlflow.start_run(run_name="lgbm_baseline"):
-    mlflow.autolog()
+    mlflow.autolog()  # Log parameters and metrics automatically
     
     model = lgb.LGBMClassifier(
         objective="binary",
         n_estimators=500,
         learning_rate=0.05,
         max_depth=6,
-        class_weight="balanced"
+        class_weight="balanced"  # Complements sample weights
     )
     
-    model.fit(
-        X_train, y_train,
-        eval_set=[(X_test, y_test)],
-        callbacks=[lgb.early_stopping(50)]
-    )
+    model.fit(X_train, y_train, sample_weight=sample_weights)
     
-    # Log custom metrics
-    from sklearn.metrics import average_precision_score
+    # Custom business metrics
+    from sklearn.metrics import average_precision_score, precision_recall_curve
+    import numpy as np
+    
+    # Calculate AUC-PR
     y_proba = model.predict_proba(X_test)[:, 1]
     auc_pr = average_precision_score(y_test, y_proba)
     mlflow.log_metric("auc_pr", auc_pr)
     
-    print(f"AUC-PR: {auc_pr:.4f}")
+    # Calculate Precision@Top10%
+    def precision_at_top_k(y_true, y_proba, k=0.10):
+        k = int(len(y_true) * k)
+        top_k_indices = y_proba.argsort()[::-1][:k]
+        true_positives = y_true.iloc[top_k_indices].sum()
+        return true_positives / k
+    
+    precision_10 = precision_at_top_k(y_test, y_proba, 0.10)
+    mlflow.log_metric("precision_at_10pct", precision_10)
+    
+    # Calculate average lead time
+    def calculate_lead_time(y_true, y_proba, prediction_date_col="prediction_date"):
+        # Get prediction dates for positive cases
+        pos_mask = y_true == 1
+        if pos_mask.sum() > 0:
+            pos_pred_dates = df.loc[pos_mask, prediction_date_col]
+            pos_dates = pd.to_datetime(pos_pred_dates["prediction_date"])
+            actual_dates = pd.to_datetime(df.loc[pos_mask, "churn_date"])
+            
+            lead_times = (actual_dates - pos_pred_dates).dt.days
+            return lead_times.mean().days
+        else:
+            return 45.0  # Default for non-churners
+    
+    avg_lead_time = calculate_lead_time(y_test, y_proba)
+    mlflow.log_metric("lead_time_days", avg_lead_time)
+    
+    # Register model
+    model_uri = f"runs:/{mlflow.active_run().info.run_id}/model"
+    mlflow.register_model(model_uri, "churn-prediction-model")
+
+print(f"AUC-PR: {auc_pr:.4f}")
+print(f"Precision@Top10%: {precision_10:.4f}")
+print(f"Average Lead Time: {avg_lead_time:.1f} days")
 ```
 
 ---
 
-## Step 8: Register Model
-
-```python
-# In Fabric notebook, after training
-
-# Register model to MLflow Model Registry
-model_uri = f"runs:/{mlflow.active_run().info.run_id}/model"
-mlflow.register_model(model_uri, "churn-prediction-model")
-
-# Model is now available in Fabric ML Models
-```
-
----
-
-## Step 9: Create Scoring Pipeline
+## Step 8: Create Scoring Pipeline
 
 Create notebook: `04_batch_scoring.py`
 
@@ -290,36 +338,52 @@ Create notebook: `04_batch_scoring.py`
 # Fabric Notebook - Batch Scoring
 
 import mlflow
-from datetime import date
+import pandas as pd
 
 # Load registered model
 model = mlflow.lightgbm.load_model("models:/churn-prediction-model/Production")
 
-# Load latest features
+# Load latest features for scoring
 df = spark.table("gold.customer_360").toPandas()
 
-# Score
-feature_cols = [...]  # Same as training
+# Generate predictions
+feature_cols = [
+    "logins_7d", "logins_30d", "days_since_last_login",
+    "total_features_used", "avg_session_duration",
+    "escalation_rate_30d", "avg_sentiment_30d",
+    "tenure_days", "cohort", "ltv_tier",
+    "contract_months", "monthly_charges", "estimated_ltv"
+]
+
 X = df[feature_cols].fillna(0)
+
+# Score
 df["churn_probability"] = model.predict_proba(X)[:, 1]
 
-# Risk tiers
+# Add risk tiers
 df["risk_tier"] = pd.cut(
     df["churn_probability"],
     bins=[0, 0.3, 0.6, 1.0],
-    labels=["Low", "Medium", "High"]
+    labels=["Low", "Medium", "High", "Critical"]
 )
 
-# Write predictions
+# Add intervention priority
+def calculate_intervention_priority(df):
+    ltv_weights = {"smb": 1.0, "mid_market": 3.0, "enterprise": 10.0}
+    df["intervention_priority"] = (
+        df["churn_probability"] * 
+        df["ltv_tier"].map(ltv_weights)
+    )
+
+# Write predictions to Delta
 spark.createDataFrame(df).write.format("delta").mode("overwrite").saveAsTable("gold.churn_predictions")
 
-# Also write to Dataverse for CRM integration (optional)
-# df.to_dataverse("churn_predictions")
+print(f"Scored {len(df)} customers")
 ```
 
 ---
 
-## Step 10: Create Power BI Dashboard
+## Step 9: Create Power BI Dashboard
 
 ```m
 1. Connect Power BI to Lakehouse SQL endpoint
@@ -335,7 +399,7 @@ spark.createDataFrame(df).write.format("delta").mode("overwrite").saveAsTable("g
 
 ---
 
-## Step 11: Schedule Pipelines
+## Step 10: Schedule Pipelines
 
 ```m
 1. Create Data Pipeline: "churn-daily-pipeline"
@@ -357,7 +421,7 @@ spark.createDataFrame(df).write.format("delta").mode("overwrite").saveAsTable("g
 |--------|------------------------|
 | `CREATE SCHEMA bronze` | `CREATE SCHEMA bronze` (same) |
 | `INTERVAL '7 days'` | `INTERVAL 7 DAY` or `date_sub(col, 7)` |
-| `EXTRACT(DAY FROM ...)` | `datediff(...)` |
+| `EXTRACT(DAY FROM ...)` | `DATEPART(day, col)` or `datediff(...)` |
 | `$prediction_date` | Use Python variable in notebook |
 | `::INTEGER` | `CAST(... AS INT)` |
 
@@ -378,17 +442,8 @@ SUM(CASE WHEN activity_date >= date_sub('{date}', 7) THEN login_count ELSE 0 END
 1. **Use Delta Lake caching** for frequently accessed tables
 2. **Partition by date** for time-series data: `PARTITIONED BY (prediction_date)`
 3. **Z-Order clustering** on customer_id for join performance
-4. **Use Spark for large-scale** transformations (>1M rows), pandas for smaller
+4. **Use Spark for large scale** transformations (>1M rows), pandas for smaller
 5. **Schedule during off-peak** hours for batch jobs
-
----
-
-## Monitoring in Fabric
-
-1. **Pipeline monitoring**: View in Data Pipeline activity runs
-2. **MLflow experiments**: Compare runs in Experiments view
-3. **Data quality**: Use Fabric Data Quality rules
-4. **Alerts**: Configure in Fabric Admin settings
 
 ---
 

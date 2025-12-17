@@ -2,7 +2,9 @@
 
 ## Executive Summary
 
-This document outlines a comprehensive approach to the churn prediction exercise, designed for a 30-minute presentation to AvePoint's CDO, VP of Data Science, and AI/ML engineering team.
+This document outlines a comprehensive approach to churn prediction
+exercise, designed for a 30-minute presentation to AvePoint's CDO,
+VP of Data Science, and AI/ML engineering team.
 
 **Technical Stack:**
 
@@ -26,7 +28,8 @@ This document outlines a comprehensive approach to the churn prediction exercise
 
 ### Business Problem Definition
 
-**Core Question:** Which users are at risk of churning, why, and what is the financial impact of inaction?
+**Core Question:** Which users are at risk of churning, why, and what is
+the financial impact of inaction?
 
 ### Multi-Tier Churn Taxonomy
 
@@ -37,7 +40,8 @@ This document outlines a comprehensive approach to the churn prediction exercise
 | **Engagement Decay** | Active subscription, usage drops | <2 logins/month | 60-90 days |
 | **Silent Churn** | Paying but not deriving value | Low engagement + renewal approaching | 90-120 days |
 
-**Primary Modeling Target:** Engagement Decay → Most actionable, longest intervention window.
+**Primary Modeling Target:** Engagement Decay → Most actionable, longest
+intervention window.
 
 ### Customer Lifecycle Framework
 
@@ -216,7 +220,7 @@ CREATE TABLE gold.customer_360 AS ...
 
 ```m
 TEMPORAL VALIDATION
-──────────────────────────────────────────────────────────────
+──────────────────────────────────────────────────────
 Historical Data                              Holdout
 ◄──────────────────────────────────────────►◄───────────────►
 
@@ -243,7 +247,8 @@ Final:  Train [M1-M9] → Evaluate [M10-M12]
 | Tabular SOTA | ✅ Yes | ⚠️ Baseline | ⚠️ Underperforms |
 | Class imbalance | ✅ Native weights | ✅ Weights | ⚠️ Requires tuning |
 
-**Justification:** "Gradient boosted trees are empirical SOTA for tabular classification, with native class imbalance support and mature SHAP interpretability."
+**Justification:** "Gradient boosted trees are empirical SOTA for tabular 
+classification, with native class imbalance support and mature SHAP interpretability."
 
 ### Evaluation Framework
 
@@ -305,7 +310,8 @@ with mlflow.start_run():
 
 #### Recommendation 1: Activation SLA for New Users
 
-**Insight:** Onboarding completion % and time-to-first-value are top predictors. Users who don't reach value in 14 days churn at 3x rate.
+**Insight:** Onboarding completion % and time-to-first-value are top predictors. 
+Users who don't reach value in 14 days churn at 3x rate.
 
 **Action:** Implement "Day 14 Activation SLA"
 
@@ -323,7 +329,8 @@ with mlflow.start_run():
 
 #### Recommendation 2: Engagement Velocity Alert System
 
-**Insight:** Negative velocity for 2+ weeks precedes 70% of Established User churns.
+**Insight:** Negative velocity for 2+ weeks precedes 70% of Established User 
+churns.
 
 **Action:** Real-time velocity monitoring with triggered interventions
 
@@ -379,7 +386,7 @@ Priority = P(churn) × P(save|intervention) × LTV
 ```m
 Week 1-2      Week 3-4      Week 5-6      Week 7-8
 ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐
-│ SHADOW  │ → │ ASSIST  │ → │  LEAD   │ → │   OWN   │
+│ SHADOW  │ → │ ASSIST  │ → │  LEAD   │ → │  OWN    │
 └─────────┘   └─────────┘   └─────────┘   └─────────┘
 Principal:90% Principal:60% Principal:30% Principal:10%
 Junior:10%    Junior:40%    Junior:70%    Junior:90%
@@ -558,5 +565,3 @@ churn_prediction/
 | Velocity Alerts | M365 usage measurable; detect when protection stops |
 | Pre-Renewal Review | Enterprise SaaS cycles predictable; make it data-driven |
 | Fabric Integration | Customer ecosystem; DuckDB → Fabric is 1:1 translation |
-
-**Interview talking point:** "These recommendations aren't generic. They're designed for enterprise SaaS with complex setup and measurable usage—exactly AvePoint's profile."
