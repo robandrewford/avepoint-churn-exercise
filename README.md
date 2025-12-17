@@ -6,7 +6,7 @@ Repo for the exercise deliverables
 
 A production-ready churn prediction system demonstrating ML engineering best practices, designed for the AvePoint Principal Applied Scientist interview exercise.
 
-## 🎯 Overview
+## Overview
 
 This project implements a complete ML pipeline for SaaS customer churn prediction:
 
@@ -17,7 +17,7 @@ This project implements a complete ML pipeline for SaaS customer churn predictio
 - **Explainability**: SHAP-based global and local explanations
 - **Production**: MLflow tracking, monitoring framework, deployment patterns
 
-## 📁 Project Structure
+## Project Structure
 
 ```m
 churn_prediction/
@@ -53,7 +53,7 @@ churn_prediction/
     └── figures/                   # Visualizations
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -100,7 +100,7 @@ uv run marimo run notebooks/02_modeling.py
 uv run marimo run notebooks/03_monitoring.py
 ```
 
-## 🏗️ Architecture
+## Architecture
 
 ### Data Layer: DuckDB Medallion
 
@@ -123,7 +123,7 @@ uv run marimo run notebooks/03_monitoring.py
 | Support | Ticket volume, sentiment, escalations | All |
 | Contract | Days to renewal, value remaining | Mature |
 
-## 📊 Key Metrics
+## Key Metrics
 
 | Metric | Target | Description |
 |--------|--------|-------------|
@@ -133,7 +133,7 @@ uv run marimo run notebooks/03_monitoring.py
 | Lead Time | > 45 days | Intervention window |
 | Lift@10% | > 3.0x | Better than random |
 
-## 📈 Microsoft Fabric Integration
+## Microsoft Fabric Integration
 
 This project is designed to translate directly to Fabric:
 
@@ -145,7 +145,7 @@ This project is designed to translate directly to Fabric:
 | MLflow (local) | Fabric MLflow |
 | Marimo | Fabric notebooks |
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Run tests
@@ -155,24 +155,12 @@ uv run pytest tests/ -v
 uv run pytest tests/ --cov=src --cov-report=html
 ```
 
-## 📚 Documentation
+## Documentation
 
 - **[PLAN.md](docs/PLAN.md)**: Complete exercise plan (Parts 1-5)
 - **[model_config.yaml](config/model_config.yaml)**: Configuration reference
 
-## 🎤 Interview Presentation
-
-30-minute structure:
-
-- 0:00-0:02: Opening ("Churn is solvable")
-- 0:02-0:06: Problem Framing
-- 0:06-0:10: Data & Features
-- 0:10-0:17: Modeling (technical depth)
-- 0:17-0:23: Recommendations (business impact)
-- 0:23-0:28: Mentorship & Scale
-- 0:28-0:30: Close + Q&A
-
-## 📋 Key Differentiators
+## Key Differentiators
 
 1. **Cohort-Aware**: Different prediction windows for New/Established/Mature users
 2. **LTV-Weighted**: Enterprise churns weighted 10x vs SMB
