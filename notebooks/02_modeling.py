@@ -15,6 +15,7 @@ __generated_with = "0.18.4"
 app = marimo.App(
     width="full",
     layout_file="layouts/02_modeling.slides.json",
+    css_file="wigwam.css",
     auto_download=["html"],
 )
 
