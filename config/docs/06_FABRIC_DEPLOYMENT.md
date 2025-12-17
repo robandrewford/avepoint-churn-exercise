@@ -1,7 +1,6 @@
 # Microsoft Fabric Deployment Guide
 
-This document maps local DuckDB implementation to Microsoft Fabric for 
-production deployment, with step-by-step instructions and code examples.
+This document maps local DuckDB implementation to Microsoft Fabric for production deployment, with step-by-step instructions and code examples.
 
 ## Architecture Translation
 

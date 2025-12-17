@@ -2,8 +2,7 @@
 
 ## Overview
 
-This document outlines the feature architecture and engineering approach for the 
-churn prediction system, focusing on cohort-aware design and temporal correctness.
+This document outlines the feature architecture and engineering approach for the churn prediction system, focusing on cohort-aware design and temporal correctness.
 
 ## Core Architecture Principles
 

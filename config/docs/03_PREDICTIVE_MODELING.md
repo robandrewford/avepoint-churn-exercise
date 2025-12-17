@@ -2,9 +2,7 @@
 
 ## Overview
 
-This document outlines the modeling approach for the churn prediction 
-system, focusing on algorithm selection, validation methodology, and evaluation 
-framework.
+This document outlines the modeling approach for the churn prediction system, focusing on algorithm selection, validation methodology, and evaluation framework.
 
 ## Algorithm Selection
 
@@ -12,8 +10,7 @@ framework.
 
 #### Rationale
 
-Gradient Boosted Trees are the empirical State-of-the-Art (SOTA) for tabular 
-classification tasks, particularly for imbalanced datasets like churn prediction.
+Gradient Boosted Trees are the empirical State-of-the-Art (SOTA) for tabular classification tasks, particularly for imbalanced datasets like churn prediction.
 
 **Key Advantages:**
 
@@ -41,8 +38,7 @@ classification tasks, particularly for imbalanced datasets like churn prediction
 
 #### LTV Weighting
 
-Enterprise customers have 10x the churn cost of SMB customers. The model 
-should reflect this business reality through weighted learning.
+Enterprise customers have 10x the churn cost of SMB customers. The model should reflect this business reality through weighted learning.
 
 ```python
 # LTV weight mapping
@@ -92,8 +88,7 @@ model.fit(
 
 #### Business-Conscious Threshold Selection
 
-The optimal threshold balances catch more churners against the 
-constraint of CS team capacity.
+The optimal threshold balances catch more churners against the constraint of CS team capacity.
 
 ```python
 def find_optimal_threshold(y_true, y_proba, capacity_pct=0.10):
@@ -117,9 +112,7 @@ def find_optimal_threshold(y_true, y_proba, capacity_pct=0.10):
 
 #### Why Not Random CV?
 
-Random cross-validation can lead to data leakage in time-series 
-problems. Training on future data to predict past events doesn't reflect 
-real-world deployment.
+Random cross-validation can lead to data leakage in time-series problems. Training on future data to predict past events doesn't reflect real-world deployment.
 
 #### Temporal CV Design
 
@@ -159,8 +152,7 @@ class TemporalTimeSeriesSplit:
 
 #### Precision@Top10%
 
-Measures the precision when flagging the top 10% highest-risk customers. 
-Critical metric because CS team has limited capacity.
+Measures the precision when flagging the top 10% highest-risk customers. Critical metric because CS team has limited capacity.
 
 ```python
 def precision_at_top_k(y_true, y_proba, k=0.10):
@@ -178,20 +170,17 @@ def precision_at_top_k(y_true, y_proba, k=0.10):
 
 #### Recall@30d
 
-Measures the proportion of customers who actually churn within 30 days 
-and were flagged as high-risk.
+Measures the proportion of customers who actually churn within 30 days and were flagged as high-risk.
 
 #### Lead Time Analysis
 
-Average time between prediction and actual churn for customers 
-who were correctly predicted to churn.
+Average time between prediction and actual churn for customers who were correctly predicted to churn.
 
 ### Calibration Metrics
 
 #### Brier Score
 
-Measures the accuracy of predicted probabilities. Lower scores indicate 
-better-calibrated models.
+Measures the accuracy of predicted probabilities. Lower scores indicate better-calibrated models.
 
 ```python
 def brier_score(y_true, y_proba):
@@ -205,8 +194,7 @@ def brier_score(y_true, y_proba):
 
 ### SHAP Integration
 
-SHAP (SHapley Additive exPlanations) provides both global and local model 
-interpretability.
+SHAP (SHapley Additive exPlanations) provides both global and local model interpretability.
 
 #### Global Feature Importance
 

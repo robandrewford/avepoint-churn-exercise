@@ -2,9 +2,7 @@
 
 ## Overview
 
-This document outlines a structured approach to mentorship and team 
-capability building for the churn prediction project and future production 
-environment.
+This document outlines a structured approach to mentorship and team capability building for the churn prediction project and future production environment.
 
 ## Mentorship Philosophy
 
@@ -25,18 +23,21 @@ environment.
 **Objective**: Observe and learn without direct responsibility
 
 **Activities**:
+
 - Shadow stakeholder meetings and customer interactions
 - Review and understand existing processes
 - Participate in code reviews and planning sessions
 - Document observations and ask clarifying questions
 
 **Junior Responsibilities**:
+
 - **Observation**: Active listening and note-taking during meetings
 - **Documentation**: Create learning journal documenting insights
 - **Questions**: Prepare thoughtful questions in advance
 - **Reflection**: Weekly self-assessment of learning progress
 
 **Mentor Responsibilities**:
+
 - **Demonstration**: Show how you approach problems and make decisions
 - **Explanation**: Articulate reasoning behind technical choices
 - **Feedback**: Provide constructive, specific feedback on junior contributions
@@ -55,24 +56,27 @@ environment.
 **Objective**: Contribute with guidance while increasing responsibility
 
 **Activities**:
+
 - Execute well-defined tasks with mentor oversight
 - Lead small project components or initiatives
 - Participate in technical design discussions
 - Present work and receive feedback
 
 **Junior Responsibilities**:
+
 - **Execution**: Complete assigned tasks with quality and on-time delivery
 - **Initiative**: Identify opportunities for improvement and propose solutions
 - **Communication**: Regular progress updates and risk escalation when needed
 - **Learning**: Apply feedback to improve performance and skills
 
 **Mentor Responsibilities**:
+
 - **Task Management**: Break down complex work into manageable chunks
 - **Code Review**: Thorough review of junior contributions with specific feedback
 - **Technical Guidance**: Provide coaching on best practices and patterns
 - **Support**: Be available for questions and problem-solving
 
-### Success Criteria
+### Performance Success
 
 - Junior delivers high-quality work with minimal supervision
 - Junior demonstrates growing independence and initiative-taking
@@ -86,24 +90,27 @@ environment.
 **Objective**: Lead projects or initiatives with full ownership
 
 **Activities**:
+
 - Design and implement project architecture or features
 - Lead cross-functional initiatives and collaboration
 - Manage project timeline, risks, and stakeholder communication
 - Mentor junior team members and coordinate efforts
 
 **Junior Responsibilities**:
+
 - **Leadership**: Demonstrate strategic thinking and project management
 - **Technical Excellence**: Deliver robust, scalable solutions
 - **Business Impact**: Connect technical work to business outcomes
 - **Team Coordination**: Foster collaboration and knowledge sharing
 
 **Mentor Responsibilities**:
+
 - **Strategic Guidance**: Provide high-level direction and business context
 - **Resource Management**: Ensure team has necessary tools and support
 - **Career Development**: Help team members grow their capabilities and careers
 - **Stakeholder Management**: Maintain relationships with key stakeholders
 
-### Success Criteria
+### Success with Responsibility
 
 - Junior successfully leads complex initiatives with minimal supervision
 - Junior demonstrates leadership potential and strategic thinking
@@ -118,24 +125,27 @@ environment.
 **Objective**: Develop others while maintaining technical leadership
 
 **Activities**:
+
 - Mentor senior team members on leadership and management skills
 - Provide architectural guidance and technical direction
 - Facilitate knowledge sharing and best practice development
 - Participate in strategic planning and decision-making
 
 **Junior Responsibilities**:
+
 - **Leadership**: Take on project lead or technical architect role
 - **Technical Excellence**: Maintain and improve technical expertise across the team
 - **Knowledge Sharing**: Contribute to team documentation and training materials
 - **Professional Development**: Pursue learning opportunities and skill advancement
 
 **Mentor Responsibilities**:
+
 - **Executive Presence**: Represent team in senior leadership meetings
 - **Technical Vision**: Help shape technical roadmap and innovation strategy
 - **People Development**: Guide team members' career growth and development
 - **Succession Planning**: Ensure smooth transitions and knowledge transfer
 
-### Success Criteria
+### Success in Leadership
 
 - Junior successfully transitions into leadership or specialist roles
 - Team capabilities grow and diversify
@@ -194,5 +204,4 @@ environment.
 
 ## Project Application
 
-This mentorship framework is designed to build a self-sustaining 
-capability development culture within the organization.
+This mentorship framework is designed to build a self-sustaining capability development culture within the organization.

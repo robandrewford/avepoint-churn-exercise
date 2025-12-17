@@ -247,8 +247,7 @@ Final:  Train [M1-M9] → Evaluate [M10-M12]
 | Tabular SOTA | ✅ Yes | ⚠️ Baseline | ⚠️ Underperforms |
 | Class imbalance | ✅ Native weights | ✅ Weights | ⚠️ Requires tuning |
 
-**Justification:** "Gradient boosted trees are empirical SOTA for tabular 
-classification, with native class imbalance support and mature SHAP interpretability."
+**Justification:** "Gradient boosted trees are empirical SOTA for tabular classification, with native class imbalance support and mature SHAP interpretability."
 
 ### Evaluation Framework
 
@@ -310,8 +309,7 @@ with mlflow.start_run():
 
 #### Recommendation 1: Activation SLA for New Users
 
-**Insight:** Onboarding completion % and time-to-first-value are top predictors. 
-Users who don't reach value in 14 days churn at 3x rate.
+**Insight:** Onboarding completion % and time-to-first-value are top predictors. Users who don't reach value in 14 days churn at 3x rate.
 
 **Action:** Implement "Day 14 Activation SLA"
 
@@ -329,8 +327,7 @@ Users who don't reach value in 14 days churn at 3x rate.
 
 #### Recommendation 2: Engagement Velocity Alert System
 
-**Insight:** Negative velocity for 2+ weeks precedes 70% of Established User 
-churns.
+**Insight:** Negative velocity for 2+ weeks precedes 70% of Established User churns.
 
 **Action:** Real-time velocity monitoring with triggered interventions
 

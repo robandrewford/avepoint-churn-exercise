@@ -2,8 +2,7 @@
 
 ## Business Problem Statement
 
-**Core Question:** Which users are at risk of churning, why, and what is the 
-financial impact of inaction?
+**Core Question:** Which users are at risk of churning, why, and what is the financial impact of inaction?
 
 ### Multi-Tier Churn Taxonomy
 
@@ -14,8 +13,7 @@ financial impact of inaction?
 | **Engagement Decay** | Active subscription, usage drops | <2 logins/month | 60-90 days |
 | **Silent Churn** | Paying but not deriving value | Low engagement + renewal approaching | 90-120 days |
 
-**Primary Modeling Target:** Engagement Decay → Most actionable, longest 
-intervention window.
+**Primary Modeling Target:** Engagement Decay → Most actionable, longest intervention window.
 
 ### Customer Lifecycle Framework
 
@@ -95,14 +93,10 @@ Churn Cost = (Remaining Contract Value) + (Lost Expansion Revenue) + (Replacemen
 
 | Element | AvePoint Relevance |
 |---------|-------------------|
-| **Complex Product Setup** | AvePoint products require configuration and setup, 
-creating an "activation" phase where early engagement is critical |
-| **Microsoft Ecosystem** | AvePoint operates in Microsoft ecosystem, 
-making M365 and SharePoint integration natural for customers |
-| **Enterprise Sales Cycles** | Long, predictable renewal cycles create 
-opportunities for proactive intervention strategies |
-| **Multi-Product Usage** | Customers using multiple AvePoint products have 
-different engagement patterns and churn dynamics |
+| **Complex Product Setup** | AvePoint products require configuration and setup, creating an "activation" phase where early engagement is critical |
+| **Microsoft Ecosystem** | AvePoint operates in Microsoft ecosystem, making M365 and SharePoint integration natural for customers |
+| **Enterprise Sales Cycles** | Long, predictable renewal cycles create opportunities for proactive intervention strategies |
+| **Multi-Product Usage** | Customers using multiple AvePoint products have different engagement patterns and churn dynamics |
 
 ### Target User Personas
 
