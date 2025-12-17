@@ -149,6 +149,16 @@
                 text: 'Static counts are insufficient. We engineered "Velocity Features"—the rate of change in usage—to detect momentum loss before it hits zero.'
             },
             {
+                id: 'data-2b',
+                type: 'NOTEBOOK_LINK',
+                section: 'Part 2: Data & Features',
+                title: 'Explore the Full Data Analysis',
+                subtitle: 'Interactive EDA with 50K Customers',
+                description: 'Dive deep into the data with our comprehensive exploratory analysis: distributions, churn patterns by cohort, correlation analysis, and data quality checks across 2.5M behavioral events.',
+                notebookUrl: '01_eda.html',
+                cta: '📊 Open EDA Notebook →'
+            },
+            {
                 id: 'data-3',
                 type: 'TIMELINE_LEAKAGE',
                 section: 'Part 2: Data & Features',
@@ -198,6 +208,16 @@
                 ]
             },
             {
+                id: 'model-4b',
+                type: 'NOTEBOOK_LINK',
+                section: 'Part 3: Modeling',
+                title: 'View Complete Model Results',
+                subtitle: 'Performance Metrics & SHAP Analysis',
+                description: 'Explore the full modeling notebook with actual holdout results, SHAP feature importance, calibration analysis, performance by cohort/LTV tier, and intervention recommendations.',
+                notebookUrl: '02_modeling.html',
+                cta: '🎯 Open Modeling Notebook →'
+            },
+            {
                 id: 'rec-1',
                 type: 'INSIGHT_CARD',
                 section: 'Part 4: Recommendations',
@@ -242,6 +262,16 @@
                     { name: 'Model Drift', desc: 'Has behavior changed? (PSI/KS)' },
                     { name: 'Business Impact', desc: 'Are we saving money? (Lift/ROI)' }
                 ]
+            },
+            {
+                id: 'scale-2b',
+                type: 'NOTEBOOK_LINK',
+                section: 'Part 5: Mentorship & Scale',
+                title: 'Live Production Dashboard',
+                subtitle: 'Real-Time Model Health Tracking',
+                description: 'Access the live monitoring dashboard tracking data quality metrics, prediction drift detection, feature distribution shifts, and business impact KPIs with automated alerting.',
+                notebookUrl: '03_monitoring.html',
+                cta: '📈 Open Monitoring Dashboard →'
             },
             {
                 id: 'close',
@@ -707,6 +737,26 @@
             </SlideLayout>
         );
 
+        // NEW: Notebook link slide component
+        const NotebookLinkSlide = ({ slide }) => (
+            <SlideLayout section={slide.section} title={slide.title} subtitle={slide.subtitle}>
+                <div className="flex flex-col items-center justify-center h-full gap-8 pb-12">
+                    <p className="text-xl text-gray-600 text-center max-w-3xl">{slide.description}</p>
+                    <a
+                        href={slide.notebookUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-red-600 text-white px-12 py-5 rounded-lg text-2xl font-bold hover:bg-red-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                    >
+                        {slide.cta}
+                    </a>
+                    <div className="text-sm text-gray-400 mt-4">
+                        Opens in new tab • Full interactive notebook
+                    </div>
+                </div>
+            </SlideLayout>
+        );
+
         // --- Main App ---
 
         function Presentation() {
@@ -782,6 +832,7 @@
                         {slide.type === 'UPLIFT_MATRIX' && <UpliftMatrixSlide slide={slide} />}
                         {slide.type === 'MONITORING' && <MonitoringSlide slide={slide} />}
                         {slide.type === 'MENTORSHIP' && <MentorshipSlide slide={slide} />}
+                        {slide.type === 'NOTEBOOK_LINK' && <NotebookLinkSlide slide={slide} />}
 
                     </div>
 
