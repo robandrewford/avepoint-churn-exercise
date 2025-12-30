@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 Synthetic Data Generator for Churn Prediction
 
