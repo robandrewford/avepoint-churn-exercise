@@ -12,7 +12,7 @@ Fabric Translation:
 - Use mlflow.autolog() for automatic tracking
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -386,3 +386,71 @@ def load_model(path: str) -> tuple[lgb.LGBMClassifier, list[str]]:
         feature_columns = f.read().strip().split("\n")
     
     return model, feature_columns
+
+
+if __name__ == "__main__":
+    # Script execution for end-to-end verification
+    import argparse
+    from datetime import date as date_module
+    from src.utils.duckdb_lakehouse import create_lakehouse
+    
+    parser = argparse.ArgumentParser(description="Train churn prediction model")
+    parser.add_argument("--config", type=str, help="Path to config file")
+    parser.add_argument("--experiment", type=str, default="churn-prediction", help="MLflow experiment name")
+    parser.add_argument("--days-offset", type=int, default=60, help="Days offset for prediction date")
+    
+    args = parser.parse_args()
+    
+    # 1. Load config
+    config = load_config(args.config)
+    project_root = Path(__file__).parent.parent.parent
+    
+    # 2. Setup Lakehouse and Load Data
+    db_path = str(project_root / "outputs" / "churn_lakehouse.duckdb")
+    lakehouse = create_lakehouse(db_path)
+    
+    # Load synthetic Parquet files
+    data_dir = project_root / "outputs" / "synthetic_data"
+    print(f"Loading data from {data_dir}...")
+    
+    customers = pd.read_parquet(data_dir / "customers.parquet")
+    daily_engagement = pd.read_parquet(data_dir / "daily_engagement.parquet")
+    support_tickets = pd.read_parquet(data_dir / "support_tickets.parquet")
+    
+    lakehouse.load_bronze_customers(customers)
+    lakehouse.transform_to_silver_customers()
+    lakehouse.load_silver_daily_engagement(daily_engagement)
+    lakehouse.load_bronze_tickets(support_tickets)
+    lakehouse.transform_to_silver_tickets()
+    
+    # 3. Build Features (Gold Layer)
+    prediction_date = date_module.today() - timedelta(days=args.days_offset)
+    print(f"Building features for {prediction_date}...")
+    lakehouse.build_customer_360(prediction_date)
+    
+    # Get training data
+    df = lakehouse.get_training_data(prediction_date)
+    print(f"Total training samples: {len(df):,}")
+    
+    # 4. Prepare and Split
+    X, y, weights = prepare_training_data(df)
+    split_idx = int(len(X) * 0.8)
+    X_train, X_val = X.iloc[:split_idx], X.iloc[split_idx:]
+    y_train, y_val = y.iloc[:split_idx], y.iloc[split_idx:]
+    weights_train = weights.iloc[:split_idx]
+    
+    # 5. Train with MLflow
+    print("Starting MLflow run...")
+    model, run_id = train_with_mlflow(
+        X_train, y_train,
+        X_val, y_val,
+        sample_weights=weights_train,
+        experiment_name=args.experiment,
+        config=config
+    )
+    
+    # 6. Save Model
+    model_path = project_root / "outputs" / "models" / "churn_model_v1.joblib"
+    save_model(model, str(model_path), X_train.columns.tolist())
+    
+    print(f"Verification complete. Run ID: {run_id}")

@@ -637,3 +637,83 @@ def generate_evaluation_report(
         "threshold_metrics": threshold_metrics,
         "business_impact": business_impact,
     }
+
+
+if __name__ == "__main__":
+    import argparse
+    import json
+    from pathlib import Path
+    from src.model.train import load_model, prepare_training_data
+    from src.utils.duckdb_lakehouse import create_lakehouse
+    from datetime import date as date_module, timedelta
+    
+    parser = argparse.ArgumentParser(description="Evaluate churn prediction model")
+    parser.add_argument("--model", type=str, help="Path to model file")
+    parser.add_argument("--days-offset", type=int, default=60, help="Days offset for test data")
+    
+    args = parser.parse_args()
+    
+    project_root = Path(__file__).parent.parent.parent
+    
+    # 1. Load Model
+    model_path = args.model or str(project_root / "outputs" / "models" / "churn_model_v1.joblib")
+    print(f"Loading model from {model_path}...")
+    model, features = load_model(model_path)
+    
+    # 2. Setup Lakehouse and Get Data
+    db_path = str(project_root / "outputs" / "churn_lakehouse.duckdb")
+    lakehouse = create_lakehouse(db_path)
+    
+    prediction_date = date_module.today() - timedelta(days=args.days_offset)
+    print(f"Loading test data for {prediction_date}...")
+    df = lakehouse.get_training_data(prediction_date)
+    
+    if len(df) == 0:
+        print("Error: No data found for the specified date.")
+        exit(1)
+        
+    # 3. Prepare Data
+    X, y, weights = prepare_training_data(df)
+    
+    # 4. Generate Report
+    print("Generating evaluation report...")
+    report = generate_evaluation_report(model, df, X, y)
+    
+    # 5. Print Summary
+    print("\n" + "="*40)
+    print("EVALUATION SUMMARY")
+    print("="*40)
+    print(f"Overall AUC-PR: {report['overall']['auc_pr']:.3f}")
+    print(f"Overall Recall: {report['overall']['recall']:.3f}")
+    print(f"Precision@10%:  {report['overall']['precision_at_10pct']:.3f}")
+    print(f"Optimal Threshold: {report['optimal_threshold']:.2f}")
+    
+    if report['business_impact']:
+        print("-"*40)
+        print(f"Expected ROI: {report['business_impact']['roi']:.1f}x")
+        print(f"Net Benefit:  ${report['business_impact']['net_benefit']:,.0f}")
+    print("="*40)
+    
+    # 6. Save Report
+    report_path = project_root / "outputs" / "evaluation_report.json"
+    # Convert types for JSON serialization
+    def convert_to_serializable(obj):
+        if isinstance(obj, (np.integer, np.floating)):
+            return obj.item()
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return obj
+
+    # Deeply nested serialization
+    def deep_convert(obj):
+        if isinstance(obj, dict):
+            return {k: deep_convert(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [deep_convert(v) for v in obj]
+        else:
+            return convert_to_serializable(obj)
+
+    with open(report_path, "w") as f:
+        json.dump(deep_convert(report), f, indent=2)
+    
+    print(f"Full report saved to {report_path}")

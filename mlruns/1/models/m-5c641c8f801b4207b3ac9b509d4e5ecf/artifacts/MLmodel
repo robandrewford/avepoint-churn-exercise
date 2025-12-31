@@ -1,0 +1,48 @@
+artifact_path: /Users/robertford/Repos/avepoint-churn-exercise/mlruns/1/models/m-5c641c8f801b4207b3ac9b509d4e5ecf/artifacts
+flavors:
+  lightgbm:
+    code: null
+    data: model.pkl
+    lgb_version: 4.6.0
+    model_class: lightgbm.sklearn.LGBMClassifier
+  python_function:
+    data: model.pkl
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.lightgbm
+    python_version: 3.12.10
+is_signature_from_type_hint: false
+mlflow_version: 3.7.0
+model_id: m-5c641c8f801b4207b3ac9b509d4e5ecf
+model_size_bytes: 806911
+model_uuid: m-5c641c8f801b4207b3ac9b509d4e5ecf
+prompts: null
+run_id: ad830064b4674f23a273896a05ca966f
+signature:
+  inputs: '[{"type": "integer", "name": "days_to_first_login", "required": true},
+    {"type": "double", "name": "onboarding_completion_pct", "required": true}, {"type":
+    "integer", "name": "first_week_logins", "required": true}, {"type": "integer",
+    "name": "logins_7d", "required": true}, {"type": "integer", "name": "logins_14d",
+    "required": true}, {"type": "integer", "name": "logins_30d", "required": true},
+    {"type": "integer", "name": "features_used_7d", "required": true}, {"type": "integer",
+    "name": "features_used_30d", "required": true}, {"type": "double", "name": "feature_adoption_pct",
+    "required": true}, {"type": "double", "name": "session_minutes_7d", "required":
+    true}, {"type": "double", "name": "session_minutes_30d", "required": true}, {"type":
+    "double", "name": "avg_session_duration", "required": true}, {"type": "integer",
+    "name": "days_since_last_login", "required": true}, {"type": "integer", "name":
+    "days_since_last_feature_use", "required": true}, {"type": "double", "name": "login_velocity_wow",
+    "required": true}, {"type": "double", "name": "feature_velocity_wow", "required":
+    true}, {"type": "double", "name": "login_trend_4w", "required": true}, {"type":
+    "integer", "name": "tickets_30d", "required": true}, {"type": "double", "name":
+    "avg_sentiment_30d", "required": true}, {"type": "double", "name": "escalation_rate_30d",
+    "required": true}, {"type": "integer", "name": "days_to_renewal", "required":
+    true}, {"type": "double", "name": "contract_value_remaining", "required": true},
+    {"type": "integer", "name": "tenure_days", "required": true}, {"type": "double",
+    "name": "estimated_ltv", "required": true}, {"type": "long", "name": "cohort_encoded",
+    "required": true}, {"type": "long", "name": "ltv_tier_encoded", "required": true},
+    {"type": "long", "name": "contract_type_encoded", "required": true}]'
+  outputs: '[{"type": "tensor", "tensor-spec": {"dtype": "int64", "shape": [-1]}}]'
+  params: null
+type_hint_from_example: false
+utc_time_created: '2025-12-30 21:42:57.033105'
